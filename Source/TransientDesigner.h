@@ -34,9 +34,9 @@ class TransientDesignerProcessor{
         // SAMPLE RATE
         float Fs = 44100.f;
 
-        // ENVELOPE FILTER COEFFICIENTS (from your MATLAB)
-        float gFast = 0.9991f;
-        float gSlow = 0.9999f;
+        // ENVELOPE FILTER COEFFICIENTS (computed from sample rate in prepareToPlay)
+        float gFast = 0.f;
+        float gSlow = 0.f;
 
         // PER-CHANNEL STATE (like currentPhase in tremolo)
         float fbFast[2] = {0.f, 0.f};

@@ -40,6 +40,10 @@ void TransientDesignerProcessor::prepareToPlay(float sampleRate)
 {
     Fs = sampleRate;
 
+    // ~10ms attack envelope, ~100ms sustain envelope
+    gFast = std::exp(-1.f / (0.010f * sampleRate));
+    gSlow = std::exp(-1.f / (0.100f * sampleRate));
+
     fbFast[0] = fbFast[1] = 0.f;
     fbSlow[0] = fbSlow[1] = 0.f;
 }
