@@ -10,6 +10,17 @@
 #include "PluginEditor.h"
 
 //==============================================================================
+juce::AudioProcessorValueTreeState::ParameterLayout TransientDesignerAudioProcessor::createParameterLayout()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("attack",  "Attack",  -1.f, 1.f, 0.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", -1.f, 1.f, 0.f));
+    params.push_back(std::make_unique<juce::AudioParameterBool> ("bypass",  "Bypass",  false));
+
+    return { params.begin(), params.end() };
+}
+
 TransientDesignerAudioProcessor::TransientDesignerAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
@@ -19,8 +30,11 @@ TransientDesignerAudioProcessor::TransientDesignerAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
+#else
+     :
 #endif
+       apvts (*this, nullptr, "Parameters", createParameterLayout())
 {
 }
 
@@ -94,8 +108,6 @@ void TransientDesignerAudioProcessor::changeProgramName (int index, const juce::
 void TransientDesignerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     transientDesigner.prepareToPlay(sampleRate);
-    transientDesigner.setAttack(1);
-    transientDesigner.setSustain(-1);
 }
 
 void TransientDesignerAudioProcessor::releaseResources()
@@ -136,20 +148,19 @@ void TransientDesignerAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+
+    if (apvts.getRawParameterValue("bypass")->load() > 0.5f)
+        return;
+
+    transientDesigner.setAttack  (apvts.getRawParameterValue("attack") ->load());
+    transientDesigner.setSustain (apvts.getRawParameterValue("sustain")->load());
 
     int N = buffer.getNumSamples();
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
-
         transientDesigner.processBuffer(channelData, channel, N);
     }
 }
@@ -168,15 +179,16 @@ juce::AudioProcessorEditor* TransientDesignerAudioProcessor::createEditor()
 //==============================================================================
 void TransientDesignerAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    auto state = apvts.copyState();
+    std::unique_ptr<juce::XmlElement> xml (state.createXml());
+    copyXmlToBinary (*xml, destData);
 }
 
 void TransientDesignerAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+    if (xmlState != nullptr && xmlState->hasTagName (apvts.state.getType()))
+        apvts.replaceState (juce::ValueTree::fromXml (*xmlState));
 }
 
 //==============================================================================

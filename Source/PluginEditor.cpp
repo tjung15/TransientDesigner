@@ -11,11 +11,30 @@
 
 //==============================================================================
 TransientDesignerAudioProcessorEditor::TransientDesignerAudioProcessorEditor (TransientDesignerAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p),
+      attackAttachment  (p.apvts, "attack",  attackSlider),
+      sustainAttachment (p.apvts, "sustain", sustainSlider),
+      bypassAttachment  (p.apvts, "bypass",  bypassButton)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-    setSize (400, 300);
+    attackSlider.setSliderStyle  (juce::Slider::RotaryVerticalDrag);
+    attackSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 60, 20);
+    addAndMakeVisible (attackSlider);
+
+    sustainSlider.setSliderStyle  (juce::Slider::RotaryVerticalDrag);
+    sustainSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 60, 20);
+    addAndMakeVisible (sustainSlider);
+
+    attackLabel.setText ("Attack", juce::dontSendNotification);
+    attackLabel.setJustificationType (juce::Justification::centred);
+    addAndMakeVisible (attackLabel);
+
+    sustainLabel.setText ("Sustain", juce::dontSendNotification);
+    sustainLabel.setJustificationType (juce::Justification::centred);
+    addAndMakeVisible (sustainLabel);
+
+    addAndMakeVisible (bypassButton);
+
+    setSize (400, 250);
 }
 
 TransientDesignerAudioProcessorEditor::~TransientDesignerAudioProcessorEditor()
@@ -25,16 +44,28 @@ TransientDesignerAudioProcessorEditor::~TransientDesignerAudioProcessorEditor()
 //==============================================================================
 void TransientDesignerAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-
-    g.setColour (juce::Colours::white);
-    g.setFont (juce::FontOptions (15.0f));
-    g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
+    g.fillAll (juce::Colour (0xff1e1e1e));
 }
 
 void TransientDesignerAudioProcessorEditor::resized()
 {
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
+    auto area = getLocalBounds().reduced (20);
+
+    // Bypass button sits at the top centre
+    bypassButton.setBounds (area.removeFromTop (30).withSizeKeepingCentre (80, 24));
+
+    area.removeFromTop (10);
+
+    // Two knob columns side by side
+    auto knobArea = area;
+    int knobWidth = knobArea.getWidth() / 2;
+
+    auto attackArea  = knobArea.removeFromLeft (knobWidth);
+    auto sustainArea = knobArea;
+
+    attackLabel .setBounds (attackArea .removeFromTop (20));
+    sustainLabel.setBounds (sustainArea.removeFromTop (20));
+
+    attackSlider .setBounds (attackArea);
+    sustainSlider.setBounds (sustainArea);
 }

@@ -12,22 +12,28 @@
 #include "PluginProcessor.h"
 
 //==============================================================================
-/**
-*/
 class TransientDesignerAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
     TransientDesignerAudioProcessorEditor (TransientDesignerAudioProcessor&);
     ~TransientDesignerAudioProcessorEditor() override;
 
-    //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
     TransientDesignerAudioProcessor& audioProcessor;
+
+    juce::Slider attackSlider;
+    juce::Slider sustainSlider;
+    juce::Label  attackLabel;
+    juce::Label  sustainLabel;
+
+    juce::ToggleButton bypassButton { "Bypass" };
+
+    juce::AudioProcessorValueTreeState::SliderAttachment attackAttachment;
+    juce::AudioProcessorValueTreeState::SliderAttachment sustainAttachment;
+    juce::AudioProcessorValueTreeState::ButtonAttachment bypassAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TransientDesignerAudioProcessorEditor)
 };
