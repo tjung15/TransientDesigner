@@ -12,27 +12,28 @@
 
 void TransientDesignerProcessor::processBuffer(float* buffer, int c, int N)
 {
+    const float kFast = (1.f - gFast) * 2.f;
+    const float kSlow = (1.f - gSlow) * 3.f;
+
+    float fast = fbFast[c];
+    float slow = fbSlow[c];
+
     for (int n = 0; n < N; ++n)
     {
-        buffer[n] = processSample(buffer[n], c);
+        float x    = buffer[n];
+        float absX = std::fabs(x);
+
+        fast = kFast * absX + gFast * fast;
+        slow = kSlow * absX + gSlow * slow;
+
+        float diff = fast - slow;
+        float gain = 1.f + attack * std::max(diff, 0.f) - sustain * std::min(diff, 0.f);
+
+        buffer[n] = x * gain;
     }
-}
 
-float TransientDesignerProcessor::processSample(float x, int c)
-{
-    float absX = std::fabs(x);
-
-    float envFast = (1.f - gFast) * 2.f * absX + gFast * fbFast[c];
-    fbFast[c] = envFast;
-
-    float envSlow = (1.f - gSlow) * 3.f * absX + gSlow * fbSlow[c];
-    fbSlow[c] = envSlow;
-
-    float diff = envFast - envSlow;
-
-    float gain = 1.f + attack * std::max(diff, 0.f) - sustain * std::min(diff, 0.f);
-
-    return x * gain;
+    fbFast[c] = fast;
+    fbSlow[c] = slow;
 }
 
 void TransientDesignerProcessor::prepareToPlay(float sampleRate)
