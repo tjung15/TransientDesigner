@@ -154,8 +154,11 @@ void TransientDesignerAudioProcessor::processBlock (juce::AudioBuffer<float>& bu
     if (apvts.getRawParameterValue("bypass")->load() > 0.5f)
         return;
 
-    transientDesigner.setAttack  (apvts.getRawParameterValue("attack") ->load());
-    transientDesigner.setSustain (apvts.getRawParameterValue("sustain")->load());
+    float attackVal  = apvts.getRawParameterValue("attack") ->load();
+    float sustainVal = apvts.getRawParameterValue("sustain")->load();
+
+    transientDesigner.setAttack  (attackVal);
+    transientDesigner.setSustain (sustainVal);
 
     int N = buffer.getNumSamples();
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
