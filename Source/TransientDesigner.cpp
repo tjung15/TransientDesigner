@@ -27,7 +27,7 @@ void TransientDesignerProcessor::processBuffer(float* buffer, int c, int N)
         slow = kSlow * absX + gSlow * slow;
 
         float diff = fast - slow;
-        float gain = 1.f + 10.f * (attack * std::max(diff, 0.f) - sustain * std::min(diff, 0.f));
+        float gain = 1.f + 8.f * (attack * std::max(diff, 0.f) - sustain * std::min(diff, 0.f));
 
         buffer[n] = x * gain;
     }

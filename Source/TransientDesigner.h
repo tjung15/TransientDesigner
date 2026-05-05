@@ -38,7 +38,7 @@ class TransientDesignerProcessor{
         float gFast = 0.f;
         float gSlow = 0.f;
 
-        // PER-CHANNEL STATE (like currentPhase in tremolo)
+        // PER-CHANNEL STATE
         float fbFast[2] = {0.f, 0.f};
         float fbSlow[2] = {0.f, 0.f};
 
